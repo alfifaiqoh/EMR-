@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
-from fastapi import Query
 
 from app.database.dependencies import get_db
 from app.models.patient import Patient
@@ -15,6 +14,8 @@ router = APIRouter(
     prefix="/patients",
     tags=["Patients"]
 )
+
+
 # CREATE
 @router.post(
     "/",
@@ -24,7 +25,6 @@ def create_patient(
     patient: PatientCreate,
     db: Session = Depends(get_db)
 ):
-    # cek duplicate NIK
     existing_patient = (
         db.query(Patient)
         .filter(Patient.nik == patient.nik)
@@ -59,33 +59,7 @@ def create_patient(
     }
 
 
-# GET ALL
-@router.get(
-    "/",
-    response_model=List[PatientResponse]
-)
-def get_patients(
-    db: Session = Depends(get_db)
-):
-    patients = db.query(Patient).all()
-
-    result = []
-
-    for patient in patients:
-        result.append({
-            "id": patient.id,
-            "nik": patient.nik,
-            "full_name": patient.fullname,
-            "gender": patient.gender,
-            "phone": patient.phone,
-            "ihs_number": patient.ihs_number,
-            "created_at": patient.created_at
-        })
-
-    return result
-
-
-# GET BY ID
+# GET ALL + SEARCH + PAGINATION
 @router.get(
     "/",
     response_model=List[PatientResponse]
@@ -98,14 +72,12 @@ def get_patients(
 ):
     query = db.query(Patient)
 
-    # search fullname / nik
     if search:
         query = query.filter(
             (Patient.fullname.ilike(f"%{search}%")) |
             (Patient.nik.ilike(f"%{search}%"))
         )
 
-    # pagination
     skip = (page - 1) * limit
 
     patients = (
@@ -131,9 +103,41 @@ def get_patients(
     return result
 
 
+# GET BY ID
+@router.get(
+    "/{patient_id}",
+    response_model=PatientResponse
+)
+def get_patient(
+    patient_id: int,
+    db: Session = Depends(get_db)
+):
+    patient = (
+        db.query(Patient)
+        .filter(Patient.id == patient_id)
+        .first()
+    )
+
+    if not patient:
+        raise HTTPException(
+            status_code=404,
+            detail="Patient not found"
+        )
+
+    return {
+        "id": patient.id,
+        "nik": patient.nik,
+        "full_name": patient.fullname,
+        "gender": patient.gender,
+        "phone": patient.phone,
+        "ihs_number": patient.ihs_number,
+        "created_at": patient.created_at
+    }
+
+
 # UPDATE
 @router.put(
-    "/",
+    "/{patient_id}",
     response_model=PatientResponse
 )
 def update_patient(
@@ -180,7 +184,7 @@ def update_patient(
 
 
 # DELETE
-@router.delete("/")
+@router.delete("/{patient_id}")
 def delete_patient(
     patient_id: int,
     db: Session = Depends(get_db)
