@@ -5,6 +5,9 @@ from app.database.connection import engine
 from app.models.patient import Patient
 from app.models.user import User
 from app.models.encounter import Encounter
+from app.models.soap import SOAP
+from app.models.diagnosis import Diagnosis
+from app.models.treatment import Treatment
 
 Base.metadata.create_all(bind=engine)
 

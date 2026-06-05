@@ -10,8 +10,20 @@ from fastapi.exceptions import (
     RequestValidationError
 )
 
+from app.routers.soap import (
+    router as soap_router
+)
+
 from app.core.exception_handler import (
     validation_exception_handler
+)
+
+from app.routers.diagnosis import (
+    router as diagnosis_router
+)
+
+from app.routers.treatment import (
+    router as treatment_router
 )
 
 # Create FastAPI app
@@ -24,13 +36,27 @@ app.add_exception_handler(
     validation_exception_handler
 )
 
+app.include_router(auth.router)
+
 app.include_router(
     encounter_router,
     prefix="/api/v1"
 )
 
-app.include_router(auth.router)
+app.include_router(
+    soap_router,
+    prefix="/api/v1"
+)
 
+app.include_router(
+    diagnosis_router,
+    prefix="/api/v1"
+)
+
+app.include_router(
+    treatment_router,
+    prefix="/api/v1"
+)
 
 # Register routes
 app.include_router(
