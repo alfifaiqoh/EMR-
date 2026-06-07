@@ -3,7 +3,17 @@ from fastapi import (
     Depends,
     HTTPException
 )
+from app.crud.encounter_summary import (
+    get_encounter_summary
+)
 
+from app.schemas.encounter_summary import (
+    EncounterSummaryResponse
+)
+from app.models.encounter import Encounter
+from app.models.soap import SOAP
+from app.models.diagnosis import Diagnosis
+from app.models.treatment import Treatment
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import (
@@ -45,6 +55,7 @@ def create_new_encounter(
     require_doctor
     )
 ):
+    
 
     new_encounter = (
         create_encounter(
@@ -89,6 +100,18 @@ def get_single_encounter(
 
     return encounter
 
+@router.get(
+    "/{encounter_id}/summary",
+    response_model=EncounterSummaryResponse
+)
+def get_summary(
+    encounter_id: int,
+    db: Session = Depends(get_db)
+):
+    return get_encounter_summary(
+        db,
+        encounter_id
+    )
 
 @router.put(
     "/{encounter_id}",
@@ -113,6 +136,101 @@ def update_single_encounter(
 
     return updated
 
+@router.patch(
+    "/{encounter_id}/start",
+    response_model=EncounterResponse
+)
+def start_encounter(
+    encounter_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
+):
+    encounter = get_encounter_by_id(
+        db,
+        encounter_id
+    )
+
+    if not encounter:
+        raise HTTPException(
+            status_code=404,
+            detail="Encounter not found"
+        )
+
+    encounter.status = "IN_PROGRESS"
+
+    db.commit()
+    db.refresh(encounter)
+
+    return encounter
+
+@router.patch(
+    "/{encounter_id}/complete",
+    response_model=EncounterResponse
+)
+def complete_encounter(
+    encounter_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
+):
+    encounter = get_encounter_by_id(
+        db,
+        encounter_id
+    )
+
+    if not encounter:
+        raise HTTPException(
+            status_code=404,
+            detail="Encounter not found"
+        )
+
+    soap = (
+        db.query(SOAP)
+        .filter(
+            SOAP.encounter_id == encounter_id
+        )
+        .first()
+    )
+
+    if not soap:
+        raise HTTPException(
+            status_code=400,
+            detail="SOAP required"
+        )
+
+    diagnosis_count = (
+        db.query(Diagnosis)
+        .filter(
+            Diagnosis.soap_id == soap.id
+        )
+        .count()
+    )
+
+    if diagnosis_count == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Diagnosis required"
+        )
+
+    treatment_count = (
+        db.query(Treatment)
+        .filter(
+            Treatment.soap_id == soap.id
+        )
+        .count()
+    )
+
+    if treatment_count == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Treatment required"
+        )
+
+    encounter.status = "COMPLETED"
+
+    db.commit()
+    db.refresh(encounter)
+
+    return encounter
 
 @router.delete(
     "/{encounter_id}"

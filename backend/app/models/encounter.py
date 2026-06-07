@@ -3,6 +3,7 @@ from sqlalchemy.sql import func
 
 from app.database.base import Base
 from sqlalchemy.orm import relationship
+from app.models.enums import EncounterStatus
 
 
 class Encounter(Base):
@@ -30,10 +31,12 @@ class Encounter(Base):
         nullable=True
     )
 
+    from sqlalchemy import Enum
+
     status = Column(
-        String(50),
-        default="WAITING"
-    )
+    Enum(EncounterStatus),
+    default=EncounterStatus.WAITING
+)
 
     created_at = Column(
         DateTime(timezone=True),

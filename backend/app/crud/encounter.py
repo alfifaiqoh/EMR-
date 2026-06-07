@@ -1,12 +1,10 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models.encounter import (
-    Encounter
-)
+from app.models.patient import Patient
+from app.models.encounter import Encounter
 
-from app.schemas.encounter import (
-    EncounterCreate
-)
+from app.schemas.encounter import EncounterCreate
 
 
 def create_encounter(
@@ -14,6 +12,20 @@ def create_encounter(
     encounter: EncounterCreate,
     doctor_id: int
 ):
+    patient = (
+        db.query(Patient)
+        .filter(
+            Patient.id == encounter.patient_id
+        )
+        .first()
+    )
+
+    if not patient:
+        raise HTTPException(
+            status_code=404,
+            detail="Patient not found"
+        )
+
     db_encounter = Encounter(
         **encounter.model_dump(),
         doctor_id=doctor_id

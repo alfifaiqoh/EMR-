@@ -1,6 +1,9 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models.soap import SOAP
+from app.models.encounter import Encounter
+
 from app.schemas.soap import (
     SOAPCreate,
     SOAPUpdate
@@ -11,6 +14,20 @@ def create_soap(
     db: Session,
     soap: SOAPCreate
 ):
+    encounter = (
+        db.query(Encounter)
+        .filter(
+            Encounter.id == soap.encounter_id
+        )
+        .first()
+    )
+
+    if not encounter:
+        raise HTTPException(
+            status_code=404,
+            detail="Encounter not found"
+        )
+
     db_soap = SOAP(
         **soap.model_dump()
     )
@@ -20,7 +37,6 @@ def create_soap(
     db.refresh(db_soap)
 
     return db_soap
-
 
 def get_soaps(db: Session):
     return db.query(SOAP).all()

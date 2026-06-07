@@ -52,7 +52,7 @@ def get_patients(
 
     if search:
         query = query.filter(
-            (Patient.fullname.ilike(
+            (Patient.full_name.ilike(
                 f"%{search}%"
             ))
             |

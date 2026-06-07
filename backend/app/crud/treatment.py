@@ -1,5 +1,7 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.models.soap import SOAP
 from app.models.treatment import Treatment
 
 from app.schemas.treatment import (
@@ -12,6 +14,20 @@ def create_treatment(
     db: Session,
     treatment: TreatmentCreate
 ):
+    soap = (
+        db.query(SOAP)
+        .filter(
+            SOAP.id == treatment.soap_id
+        )
+        .first()
+    )
+
+    if not soap:
+        raise HTTPException(
+            status_code=404,
+            detail="SOAP not found"
+        )
+
     db_treatment = Treatment(
         **treatment.model_dump()
     )
