@@ -1,8 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException
+)
+
 from sqlalchemy.orm import Session
 
-from app.database.dependencies import get_db
+from app.database.dependencies import (
+    get_db
+)
 
+from app.core.dependencies import (
+    get_current_user,
+    require_doctor
+)
 from app.schemas.encounter import (
     EncounterCreate,
     EncounterUpdate,
@@ -29,13 +40,23 @@ router = APIRouter(
 )
 def create_new_encounter(
     encounter: EncounterCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(
+    require_doctor
+    )
 ):
-    return create_encounter(
-        db,
-        encounter
+
+    new_encounter = (
+        create_encounter(
+            db,
+            encounter,
+            int(
+                current_user["sub"]
+            )
+        )
     )
 
+    return new_encounter
 
 @router.get(
     "/",
@@ -112,5 +133,6 @@ def delete_single_encounter(
         )
 
     return {
-        "message": "Encounter deleted"
+        "message":
+        "Encounter deleted"
     }

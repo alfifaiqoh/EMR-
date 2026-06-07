@@ -13,7 +13,9 @@ from app.schemas.soap import (
     SOAPUpdate,
     SOAPResponse
 )
-
+from app.core.dependencies import (
+    require_doctor
+)
 from app.crud.soap import (
     create_soap,
     get_soaps,
@@ -40,6 +42,9 @@ def create_new_soap(
         db,
         soap
     )
+current_user=Depends(
+    require_doctor
+)
 
 
 @router.get(

@@ -3,7 +3,9 @@ from fastapi import (
     Depends,
     HTTPException
 )
-
+from app.core.dependencies import (
+    require_doctor
+)
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
@@ -40,6 +42,7 @@ def create_new_diagnosis(
         db,
         diagnosis
     )
+Depends(require_doctor)
 
 
 @router.get(
@@ -50,7 +53,7 @@ def get_all_diagnoses(
     db: Session = Depends(get_db)
 ):
     return get_diagnoses(db)
-
+Depends(require_doctor)
 
 @router.get(
     "/{diagnosis_id}",
@@ -72,7 +75,7 @@ def get_single_diagnosis(
         )
 
     return diagnosis
-
+Depends(require_doctor)
 
 @router.put(
     "/{diagnosis_id}",
@@ -96,7 +99,7 @@ def update_single_diagnosis(
         )
 
     return updated
-
+Depends(require_doctor)
 
 @router.delete(
     "/{diagnosis_id}"
@@ -120,3 +123,4 @@ def delete_single_diagnosis(
         "message":
         "Diagnosis deleted"
     }
+Depends(require_doctor)

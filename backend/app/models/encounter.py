@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.sql import func
 
 from app.database.base import Base
+from sqlalchemy.orm import relationship
 
 
 class Encounter(Base):
@@ -16,8 +17,12 @@ class Encounter(Base):
     )
 
     doctor_id = Column(
-        Integer,
-        nullable=True
+    Integer,
+    ForeignKey("users.id"),
+    nullable=True
+    )
+    doctor = relationship(
+    "User"
     )
 
     chief_complaint = Column(
@@ -33,4 +38,14 @@ class Encounter(Base):
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now()
+    )
+
+    patient = relationship(
+    "Patient",
+    back_populates="encounters"
+    )
+
+    soaps = relationship(
+    "SOAP",
+    back_populates="encounter"
     )

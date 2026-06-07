@@ -5,7 +5,7 @@ from sqlalchemy import (
     ForeignKey,
     DateTime
 )
-
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database.base import Base
@@ -39,4 +39,9 @@ class Diagnosis(Base):
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now()
+    )
+
+    soap = relationship(
+    "SOAP",
+    back_populates="diagnoses"
     )

@@ -1,18 +1,22 @@
 from sqlalchemy.orm import Session
 
-from app.models.encounter import Encounter
+from app.models.encounter import (
+    Encounter
+)
+
 from app.schemas.encounter import (
-    EncounterCreate,
-    EncounterUpdate
+    EncounterCreate
 )
 
 
 def create_encounter(
     db: Session,
-    encounter: EncounterCreate
+    encounter: EncounterCreate,
+    doctor_id: int
 ):
     db_encounter = Encounter(
-        **encounter.model_dump()
+        **encounter.model_dump(),
+        doctor_id=doctor_id
     )
 
     db.add(db_encounter)
@@ -20,7 +24,6 @@ def create_encounter(
     db.refresh(db_encounter)
 
     return db_encounter
-
 
 def get_encounters(db: Session):
     return db.query(Encounter).all()

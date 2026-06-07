@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 
 from app.database.base import Base
-
+from sqlalchemy.orm import relationship
 
 class Patient(Base):
     __tablename__ = "cis_patientsv2"
@@ -24,3 +24,7 @@ class Patient(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+    encounters = relationship(
+    "Encounter",
+    back_populates="patient"
+)
