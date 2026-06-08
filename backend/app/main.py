@@ -10,6 +10,10 @@ from fastapi.exceptions import (
     RequestValidationError
 )
 
+from app.routers.practitioner import (
+    router as practitioner_router
+)
+
 from app.routers.soap import (
     router as soap_router
 )
@@ -37,6 +41,11 @@ app.add_exception_handler(
 )
 
 app.include_router(auth.router)
+
+app.include_router(
+    practitioner_router,
+    prefix="/api/v1"
+)
 
 app.include_router(
     encounter_router,

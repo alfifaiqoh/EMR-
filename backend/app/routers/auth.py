@@ -63,13 +63,13 @@ def register(
         )
 
     user = User(
-        username=payload.username,
-        email=payload.email,
-        hashed_password=hash_password(
-            payload.password
-        ),
-        role="ADMIN"
-    )
+    username=payload.username,
+    email=payload.email,
+    hashed_password=hash_password(
+        payload.password
+    ),
+    role=payload.role
+)
 
     db.add(user)
     db.commit()
