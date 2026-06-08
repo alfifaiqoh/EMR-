@@ -13,9 +13,11 @@ from app.schemas.soap import (
     SOAPUpdate,
     SOAPResponse
 )
+
 from app.core.dependencies import (
     require_doctor
 )
+
 from app.crud.soap import (
     create_soap,
     get_soaps,
@@ -30,40 +32,43 @@ router = APIRouter(
 )
 
 
+# CREATE
 @router.post(
     "/",
     response_model=SOAPResponse
 )
 def create_new_soap(
     soap: SOAPCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     return create_soap(
         db,
         soap
     )
-current_user=Depends(
-    require_doctor
-)
 
 
+# GET ALL
 @router.get(
     "/",
     response_model=list[SOAPResponse]
 )
 def get_all_soaps(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     return get_soaps(db)
 
 
+# GET BY ID
 @router.get(
     "/{soap_id}",
     response_model=SOAPResponse
 )
 def get_single_soap(
     soap_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     soap = get_soap_by_id(
         db,
@@ -79,6 +84,7 @@ def get_single_soap(
     return soap
 
 
+# UPDATE
 @router.put(
     "/{soap_id}",
     response_model=SOAPResponse
@@ -86,7 +92,8 @@ def get_single_soap(
 def update_single_soap(
     soap_id: int,
     soap: SOAPUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     updated = update_soap(
         db,
@@ -103,12 +110,14 @@ def update_single_soap(
     return updated
 
 
+# DELETE
 @router.delete(
     "/{soap_id}"
 )
 def delete_single_soap(
     soap_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     deleted = delete_soap(
         db,
@@ -122,5 +131,5 @@ def delete_single_soap(
         )
 
     return {
-        "message": "SOAP deleted"
+        "message": "SOAP deleted successfully"
     }

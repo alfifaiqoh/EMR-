@@ -3,31 +3,27 @@ from fastapi import (
     Depends,
     HTTPException
 )
-from app.crud.encounter_summary import (
-    get_encounter_summary
-)
-
-from app.schemas.encounter_summary import (
-    EncounterSummaryResponse
-)
-from app.models.encounter import Encounter
-from app.models.soap import SOAP
-from app.models.diagnosis import Diagnosis
-from app.models.treatment import Treatment
 from sqlalchemy.orm import Session
 
-from app.database.dependencies import (
-    get_db
-)
+from app.database.dependencies import get_db
 
 from app.core.dependencies import (
     get_current_user,
     require_doctor
 )
+
+from app.models.soap import SOAP
+from app.models.diagnosis import Diagnosis
+from app.models.treatment import Treatment
+
 from app.schemas.encounter import (
     EncounterCreate,
     EncounterUpdate,
     EncounterResponse
+)
+
+from app.schemas.encounter_summary import (
+    EncounterSummaryResponse
 )
 
 from app.crud.encounter import (
@@ -38,12 +34,20 @@ from app.crud.encounter import (
     delete_encounter
 )
 
+from app.crud.encounter_summary import (
+    get_encounter_summary
+)
+
 router = APIRouter(
     prefix="/encounters",
-    tags=["Encounters"]
+    tags=["Encounters"],
+    dependencies=[
+        Depends(get_current_user)
+    ]
 )
 
 
+# CREATE
 @router.post(
     "/",
     response_model=EncounterResponse
@@ -51,24 +55,16 @@ router = APIRouter(
 def create_new_encounter(
     encounter: EncounterCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(
-    require_doctor
-    )
+    current_user=Depends(require_doctor)
 ):
-    
-
-    new_encounter = (
-        create_encounter(
-            db,
-            encounter,
-            int(
-                current_user["sub"]
-            )
-        )
+    return create_encounter(
+        db,
+        encounter,
+        int(current_user["sub"])
     )
 
-    return new_encounter
 
+# GET ALL
 @router.get(
     "/",
     response_model=list[EncounterResponse]
@@ -79,6 +75,7 @@ def get_all_encounters(
     return get_encounters(db)
 
 
+# GET BY ID
 @router.get(
     "/{encounter_id}",
     response_model=EncounterResponse
@@ -100,6 +97,8 @@ def get_single_encounter(
 
     return encounter
 
+
+# GET SUMMARY
 @router.get(
     "/{encounter_id}/summary",
     response_model=EncounterSummaryResponse
@@ -108,11 +107,21 @@ def get_summary(
     encounter_id: int,
     db: Session = Depends(get_db)
 ):
-    return get_encounter_summary(
+    summary = get_encounter_summary(
         db,
         encounter_id
     )
 
+    if not summary:
+        raise HTTPException(
+            status_code=404,
+            detail="Encounter not found"
+        )
+
+    return summary
+
+
+# UPDATE
 @router.put(
     "/{encounter_id}",
     response_model=EncounterResponse
@@ -120,7 +129,8 @@ def get_summary(
 def update_single_encounter(
     encounter_id: int,
     encounter: EncounterUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     updated = update_encounter(
         db,
@@ -136,6 +146,8 @@ def update_single_encounter(
 
     return updated
 
+
+# START ENCOUNTER
 @router.patch(
     "/{encounter_id}/start",
     response_model=EncounterResponse
@@ -163,6 +175,8 @@ def start_encounter(
 
     return encounter
 
+
+# COMPLETE ENCOUNTER
 @router.patch(
     "/{encounter_id}/complete",
     response_model=EncounterResponse
@@ -232,12 +246,15 @@ def complete_encounter(
 
     return encounter
 
+
+# DELETE
 @router.delete(
     "/{encounter_id}"
 )
 def delete_single_encounter(
     encounter_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     deleted = delete_encounter(
         db,
@@ -251,6 +268,5 @@ def delete_single_encounter(
         )
 
     return {
-        "message":
-        "Encounter deleted"
+        "message": "Encounter deleted"
     }

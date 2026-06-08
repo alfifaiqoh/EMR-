@@ -3,13 +3,14 @@ from fastapi import (
     Depends,
     HTTPException
 )
-from app.core.dependencies import (
-    require_doctor
-)
 
 from sqlalchemy.orm import Session
 
 from app.database.dependencies import get_db
+
+from app.core.dependencies import (
+    require_doctor
+)
 
 from app.schemas.treatment import (
     TreatmentCreate,
@@ -31,37 +32,43 @@ router = APIRouter(
 )
 
 
+# CREATE
 @router.post(
     "/",
     response_model=TreatmentResponse
 )
 def create_new_treatment(
     treatment: TreatmentCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     return create_treatment(
         db,
         treatment
     )
-Depends(require_doctor)
 
+
+# GET ALL
 @router.get(
     "/",
     response_model=list[TreatmentResponse]
 )
 def get_all_treatments(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     return get_treatments(db)
-Depends(require_doctor)
 
+
+# GET BY ID
 @router.get(
     "/{treatment_id}",
     response_model=TreatmentResponse
 )
 def get_single_treatment(
     treatment_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     treatment = get_treatment_by_id(
         db,
@@ -75,8 +82,9 @@ def get_single_treatment(
         )
 
     return treatment
-Depends(require_doctor)
 
+
+# UPDATE
 @router.put(
     "/{treatment_id}",
     response_model=TreatmentResponse
@@ -84,7 +92,8 @@ Depends(require_doctor)
 def update_single_treatment(
     treatment_id: int,
     treatment: TreatmentUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     updated = update_treatment(
         db,
@@ -99,14 +108,16 @@ def update_single_treatment(
         )
 
     return updated
-Depends(require_doctor)
 
+
+# DELETE
 @router.delete(
     "/{treatment_id}"
 )
 def delete_single_treatment(
     treatment_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_doctor)
 ):
     deleted = delete_treatment(
         db,
@@ -120,7 +131,5 @@ def delete_single_treatment(
         )
 
     return {
-        "message":
-        "Treatment deleted"
+        "message": "Treatment deleted"
     }
-Depends(require_doctor)

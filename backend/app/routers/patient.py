@@ -4,11 +4,11 @@ from fastapi import (
     HTTPException,
     Query
 )
-
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.database.dependencies import get_db
+from app.core.dependencies import get_current_user
 
 from app.schemas.patient import (
     PatientCreate,
@@ -39,7 +39,7 @@ def patient_response(patient):
     return {
         "id": patient.id,
         "nik": patient.nik,
-        "full_name": patient.fullname,
+        "full_name": patient.full_name,
         "gender": patient.gender,
         "phone": patient.phone,
         "ihs_number": patient.ihs_number,
@@ -54,7 +54,8 @@ def patient_response(patient):
 )
 def create_new_patient(
     patient: PatientCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     new_patient = create_patient(
         db,
@@ -85,7 +86,8 @@ def get_all_patients(
         ge=1,
         le=100
     ),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     patients = get_patients(
         db,
@@ -107,7 +109,8 @@ def get_all_patients(
 )
 def get_history(
     patient_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     patient = get_patient_history(
         db,
@@ -130,7 +133,8 @@ def get_history(
 )
 def get_single_patient(
     patient_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     patient = get_patient(
         db,
@@ -156,7 +160,8 @@ def get_single_patient(
 def update_single_patient(
     patient_id: int,
     patient: PatientUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     updated = update_patient(
         db,
@@ -181,7 +186,8 @@ def update_single_patient(
 )
 def delete_single_patient(
     patient_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     deleted = delete_patient(
         db,
@@ -195,6 +201,5 @@ def delete_single_patient(
         )
 
     return {
-        "message":
-        "Patient deleted successfully"
+        "message": "Patient deleted successfully"
     }
